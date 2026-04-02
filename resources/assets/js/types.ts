@@ -16,14 +16,17 @@ export interface Comment {
 }
 
 export interface Post {
-  id: string;
+  id: number | string;
   content?: string;
-  imageUrl?: string;
-  likes: Array<string>;
-  comments: Comment[];
-  user: User;
-  createdAt: number;
-  privacy?: 'public' | 'private';
+  image_url?: string[];
+  author: User;
+  created_at: string;
+  likes_count?: number;
+  comments_count?: number;
+  shares_count?: number;
+  liked?: boolean;
+  is_public?: boolean;
+  comments?: Comment[];
 }
 
 export interface Story {

@@ -47,8 +47,11 @@ const Feed: React.FC<{ currentUser: User | null; onLogout: () => void }> = ({ cu
             // Pass content and File[] directly to createPost; createPost will use FormData if files exist
             const res = await createPost(content, files);
             // If API returns created post, prepend it for immediate UI feedback
-            const newPost = res?.data ?? res ?? { body: content, user: currentUser };
-            setPosts(prev => [newPost, ...prev]);
+            // createPost() in api.ts already returns res.data, so `res` IS the post object (or wrapped in .data)
+            const newPost = res?.data ?? res;
+            if (newPost && newPost.id) {
+                setPosts(prev => [newPost, ...prev]);
+            }
             return res;
         } catch (err) {
             console.error('create post failed', err);
