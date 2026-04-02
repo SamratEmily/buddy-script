@@ -14,14 +14,17 @@ import axios from 'axios';
 import CommentBox from './CommentBox';
 import PostComments from './PostComments';
 type Post = {
-    id: number;
+    id: number | string;
     author: User;
-    title: string;
-    content: string;
-    image?: string;
+    content?: string;
+    image_url?: string[];
     created_at: string;
-    likes: number;
-    comments: number;
+    likes_count?: number;
+    comments_count?: number;
+    shares_count?: number;
+    liked?: boolean;
+    is_public?: boolean;
+    comments?: any[];
 };
 
 const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStateAction<Post[]>>, currentUser: User | null }> = ({ posts, setPosts, currentUser }) => {
@@ -72,7 +75,7 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
     };
 
 
-    const handlePrivacyChange = async (postId: number, value: string) => {
+    const handlePrivacyChange = async (postId: number | string, value: string) => {
 
         const res = await privacyChange(postId.toString(), value === "1");
         const updatedPost = res?.data ?? res.data?.data ?? null;
