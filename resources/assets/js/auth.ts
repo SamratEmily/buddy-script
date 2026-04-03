@@ -45,6 +45,20 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// ---- Handle expired/invalid token globally ----
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Token expired or invalid — clear session and signal logout
+            localStorage.removeItem(SESSION_KEY);
+            // Dispatch a custom event so App.tsx can redirect to login
+            window.dispatchEvent(new Event('auth:logout'));
+        }
+        return Promise.reject(error);
+    }
+);
+
 // ---- Extract readable backend errors ----
 function extractError(err: any) {
     if (err.response?.data) {

@@ -27,6 +27,14 @@ const App: React.FC = () => {
       setCurrentPage('feed');
     }
     setIsInitializing(false);
+
+    // Listen for token expiry (401) from the axios interceptor
+    const handleAuthLogout = () => {
+      setUser(null);
+      setCurrentPage('login');
+    };
+    window.addEventListener('auth:logout', handleAuthLogout);
+    return () => window.removeEventListener('auth:logout', handleAuthLogout);
   }, []);
 
   const handleLogin = (loggedInUser: User) => {
