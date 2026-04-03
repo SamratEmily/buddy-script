@@ -4,13 +4,14 @@ import { User } from '../../../types';
 
 interface CreatePostCardProps {
   currentUser?: User | null;
-  handleSubmit?: (content: string, files: File[]) => Promise<any>;
+  handleSubmit?: (content: string, files: File[], isPublic: boolean) => Promise<any>;
 }
 
 const CreatePostCard: React.FC<CreatePostCardProps> = ({ currentUser = null, handleSubmit }) => {
   const [content, setContent] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onPostClick = async () => {
@@ -19,9 +20,10 @@ const CreatePostCard: React.FC<CreatePostCardProps> = ({ currentUser = null, han
 
     setLoading(true);
     try {
-      await handleSubmit(content, files);
+      await handleSubmit(content, files, isPublic);
       setContent('');
       setFiles([]);
+      setIsPublic(true); // reset to public after posting
     } catch (err) {
       console.error(err);
     } finally {
@@ -130,6 +132,34 @@ const CreatePostCard: React.FC<CreatePostCardProps> = ({ currentUser = null, han
               Article</button>
           </div>
         </div>
+        {/* Privacy Toggle */}
+        <div className="_feed_inner_text_area_bottom_privacy _feed_common" style={{ display: 'flex', alignItems: 'center' }}>
+          <button
+            type="button"
+            className="_feed_inner_text_area_bottom_photo_link _privacy_toggle"
+            onClick={() => setIsPublic(prev => !prev)}
+            title={isPublic ? 'Visible to everyone — click to make Private' : 'Visible only to you — click to make Public'}
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500, color: isPublic ? '#1890ff' : '#888' }}
+          >
+            {isPublic ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
+                  <path stroke="currentColor" strokeWidth="1.5" d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
+                </svg>
+                Public
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">
+                  <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                  <path stroke="currentColor" strokeWidth="1.5" d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+                Private
+              </>
+            )}
+          </button>
+        </div>
         <div className="_feed_inner_text_area_btn">
           <button type="button" className="_feed_inner_text_area_btn_link" onClick={onPostClick} disabled={loading}>
             <svg className="_mar_img" xmlns="http://www.w3.org/2000/svg" width="14" height="13" fill="none" viewBox="0 0 14 13">
@@ -174,6 +204,33 @@ const CreatePostCard: React.FC<CreatePostCardProps> = ({ currentUser = null, han
                     <path fill="#666" d="M12.49 0c2.92 0 4.665 1.92 4.693 5.132v9.659c0 3.257-1.75 5.209-4.693 5.209H5.434c-.377 0-.734-.032-1.07-.095l-.2-.041C2 19.371.74 17.555.74 14.791V5.209c0-.334.019-.654.055-.96C1.114 1.564 2.799 0 5.434 0h7.056zm-.008 1.457H5.434c-2.244 0-3.381 1.263-3.381 3.752v9.582c0 2.489 1.137 3.752 3.38 3.752h7.049c2.242 0 3.372-1.263 3.372-3.752V5.209c0-2.489-1.13-3.752-3.372-3.752zm-.239 12.053c.36 0 .652.324.652.724 0 .4-.292.724-.652.724H5.656c-.36 0-.652-.324-.652-.724 0-.4.293-.724.652-.724h6.587zm0-4.239a.643.643 0 01.632.339.806.806 0 010 .78.643.643 0 01-.632.339H5.656c-.334-.042-.587-.355-.587-.729s.253-.688.587-.729h6.587zM8.17 5.042c.335.041.588.355.588.729 0 .373-.253.687-.588.728H5.665c-.336-.041-.589-.355-.589-.728 0-.374.253-.688.589-.729H8.17z" />
                   </svg>
                 </span>
+              </button>
+            </div>
+            {/* Privacy Toggle (mobile) */}
+            <div className="_feed_inner_text_area_bottom_privacy _feed_common">
+              <button
+                type="button"
+                className="_feed_inner_text_area_bottom_photo_link _privacy_toggle"
+                onClick={() => setIsPublic(prev => !prev)}
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500, color: isPublic ? '#1890ff' : '#888' }}
+              >
+                {isPublic ? (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
+                      <path stroke="currentColor" strokeWidth="1.5" d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
+                    </svg>
+                    Public
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">
+                      <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                      <path stroke="currentColor" strokeWidth="1.5" d="M7 11V7a5 5 0 0110 0v4"/>
+                    </svg>
+                    Private
+                  </>
+                )}
               </button>
             </div>
           </div>

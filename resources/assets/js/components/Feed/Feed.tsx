@@ -38,16 +38,13 @@ const Feed: React.FC<{ currentUser: User | null; onLogout: () => void }> = ({ cu
         return () => { mounted = false };
     }, [currentUser]);
 
-    const handleCreatePost = async (content: string, files?: File[]) => {
+    const handleCreatePost = async (content: string, files?: File[], isPublic: boolean = true) => {
         if (!currentUser) {
             console.warn('No current user, cannot create post');
             return null;
         }
         try {
-            // Pass content and File[] directly to createPost; createPost will use FormData if files exist
-            const res = await createPost(content, files);
-            // If API returns created post, prepend it for immediate UI feedback
-            // createPost() in api.ts already returns res.data, so `res` IS the post object (or wrapped in .data)
+            const res = await createPost(content, files, isPublic);
             const newPost = res?.data ?? res;
             if (newPost && newPost.id) {
                 setPosts(prev => [newPost, ...prev]);

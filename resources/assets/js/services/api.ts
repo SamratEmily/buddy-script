@@ -35,7 +35,8 @@ export async function getStories(): Promise<Story[]> {
 
 export async function createPost(
   contentOrPayload: string | { body?: string; imageUrl?: string; privacy?: string; user?: User; files?: any[] },
-  files?: File[],
+  files: File[] | undefined = undefined,
+  isPublic: boolean = true,
 ) {
 
   try {
@@ -45,11 +46,12 @@ export async function createPost(
       if (files && files.length) {
         const fd = new FormData();
         fd.append('body', body);
+        fd.append('is_public', isPublic ? '1' : '0');
         files.forEach((f) => fd.append('files[]', f));
         const res = await authFetch('/posts', { method: 'post', data: fd });
         return res.data;
       }
-      const res = await authFetch('/posts', { method: 'post', data: { body } });
+      const res = await authFetch('/posts', { method: 'post', data: { body, is_public: isPublic } });
       return res.data;
     }
 
@@ -59,13 +61,14 @@ export async function createPost(
     if (payload.files && Array.isArray(payload.files) && payload.files.length && payload.files[0] instanceof File) {
       const fd = new FormData();
       fd.append('body', payload.body || '');
+      fd.append('is_public', isPublic ? '1' : '0');
       payload.files.forEach((f: File) => fd.append('files[]', f));
       const res = await authFetch('/posts', { method: 'post', data: fd });
       return res.data;
     }
 
     // Default: send JSON payload
-    const res = await authFetch('/posts', { method: 'post', data: payload });
+    const res = await authFetch('/posts', { method: 'post', data: { ...payload, is_public: isPublic } });
     return res.data;
   } catch (e) {
     console.warn('createPost failed', e);
