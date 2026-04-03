@@ -42,6 +42,7 @@ Route::middleware('auth:api')->group(function () {
 
     // Likes
     Route::post('likes', [LikeController::class, 'toggle']);
+    Route::get('likes/{type}/{id}/likers', [LikeController::class, 'likers']);
 
     // Friendships (Follow/Unfollow)
     // Route::post('/follow/{user}', [FriendshipController::class, 'follow']);

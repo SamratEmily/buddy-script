@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import txtImg from "../../../../images/txt_img.png";
 import commentImg from "../../../../images/comment_img.png";
 import { addComment, getParentComments, getReplies, likeToggle } from "../../../services/api";
+import LikersModal from "./LikersModal";
 
 const PostComments = ({ post, openMainCommentBox }) => {
   const [comments, setComments] = useState([]); // top-level comments
@@ -9,6 +10,7 @@ const PostComments = ({ post, openMainCommentBox }) => {
   const [loadingParents, setLoadingParents] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [likersModal, setLikersModal] = useState<{ type: 'comment'; id: number | string } | null>(null);
 
 const handleLikeToggle = async (likeable_id, likeable_type) => {
   console.log('Toggling like for', likeable_type, 'with ID', likeable_id);
@@ -125,6 +127,7 @@ const handleLikeToggle = async (likeable_id, likeable_type) => {
           postId={post.id}
           handleLikeToggle={handleLikeToggle}
           handleCommentSubmit={handleCommentSubmit}
+          onOpenLikers={(id) => setLikersModal({ type: 'comment', id })}
         />
       ))}
 
@@ -133,11 +136,20 @@ const handleLikeToggle = async (likeable_id, likeable_type) => {
           {loadingParents ? "Loading..." : "Load more comments"}
         </button>
       )}
+
+      {/* Who liked modal for comments */}
+      {likersModal && (
+        <LikersModal
+          type="comment"
+          id={likersModal.id}
+          onClose={() => setLikersModal(null)}
+        />
+      )}
     </div>
   );
 };
 
-const Comment = ({ comment, postId, handleCommentSubmit, handleLikeToggle }) => {
+const Comment = ({ comment, postId, handleCommentSubmit, handleLikeToggle, onOpenLikers }) => {
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [replies, setReplies] = useState([]);
@@ -199,7 +211,15 @@ const Comment = ({ comment, postId, handleCommentSubmit, handleLikeToggle }) => 
           <div className="_comment_reply">
             <ul className="_comment_reply_list">
               <li>
-                {comment.likes_count && <span>{comment.likes_count} </span>}
+                {comment.likes_count > 0 && (
+                  <span
+                    onClick={() => onOpenLikers(comment.id)}
+                    style={{ cursor: 'pointer', color: '#e25', marginRight: 4 }}
+                    title="See who liked this"
+                  >
+                    ❤️ {comment.likes_count}
+                  </span>
+                )}
                 <span
                   onClick={() => handleLikeToggle(comment.id, "comment")}
                   style={{ color: comment.liked ? "blue" : "black", cursor: "pointer" }}
@@ -249,6 +269,7 @@ const Comment = ({ comment, postId, handleCommentSubmit, handleLikeToggle }) => 
                 postId={postId}
                 handleCommentSubmit={handleCommentSubmit}
                 handleLikeToggle={handleLikeToggle}
+                onOpenLikers={onOpenLikers}
               />
             ))}
 

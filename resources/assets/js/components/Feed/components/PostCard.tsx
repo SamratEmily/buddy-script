@@ -13,6 +13,7 @@ import { addComment, likeToggle, privacyChange } from '../../../services/api';
 import axios from 'axios';
 import CommentBox from './CommentBox';
 import PostComments from './PostComments';
+import LikersModal from './LikersModal';
 type Post = {
     id: number | string;
     author: User;
@@ -32,6 +33,7 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
     const [reaction, setReaction] = useState<string | null>(""); // initial reaction state
     const [loading, setLoading] = useState(false);
     const [openComment, setOpenComment] = useState(false);
+    const [likersModal, setLikersModal] = useState<{ type: 'post' | 'comment'; id: number | string } | null>(null);
 
     const toggleDropdown = () => setOpen(!open);
     const toggleComment = () => {
@@ -221,7 +223,14 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
                             <img src={reactImg3} alt="Image" className="_react_img _rect_img_mbl_none" />
                             <img src={reactImg4} alt="Image" className="_react_img _rect_img_mbl_none" />
                             <img src={reactImg5} alt="Image" className="_react_img _rect_img_mbl_none" />
-                            <p className="_feed_inner_timeline_total_reacts_para">{post?.likes_count}</p>
+                            <p
+                                className="_feed_inner_timeline_total_reacts_para"
+                                onClick={() => setLikersModal({ type: 'post', id: post.id })}
+                                style={{ cursor: 'pointer', userSelect: 'none' }}
+                                title="See who liked this"
+                            >
+                                {post?.likes_count}
+                            </p>
                         </div>
 
                         <div className="_feed_inner_timeline_total_reacts_txt">
@@ -293,8 +302,18 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
                     <PostComments post={post} openMainCommentBox={openComment} handleLikeToggle={handleLikeToggle} />
                 </div>
             ))}
+            {likersModal && (
+                <LikersModal
+                    type={likersModal.type}
+                    id={likersModal.id}
+                    onClose={() => setLikersModal(null)}
+                />
+            )}
         </>
     );
 };
 
 export default PostCard;
+
+// Render likers modal at root level (outside the map)
+// Note: LikersModal is rendered inside PostCard below

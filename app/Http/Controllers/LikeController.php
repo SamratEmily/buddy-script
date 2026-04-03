@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Models\Comment;
+use App\Models\User;
 use App\Jobs\ToggleLikeJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
@@ -57,5 +58,37 @@ class LikeController extends Controller
             'liked' => $liked,
             'likes_count' => Redis::get($likesCountKey),
         ]);
+    }
+    public function likers(Request $request, string $type, int $id)
+    {
+        // Validate type
+        if (!in_array($type, ['post', 'comment'])) {
+            return response()->json(['error' => 'Invalid likeable type'], 422);
+        }
+
+        $likesSetKey = "{$type}:{$id}:liked_users";
+
+        // Try Redis first (fast path)
+        $userIds = Redis::smembers($likesSetKey);
+
+        if (empty($userIds)) {
+            // Fall back to DB if Redis has no data (e.g. after restart)
+            $model = $type === 'post' ? Post::findOrFail($id) : Comment::findOrFail($id);
+            $userIds = $model->likes()->pluck('user_id')->toArray();
+        }
+
+        if (empty($userIds)) {
+            return response()->json(['data' => []]);
+        }
+
+        $users = User::whereIn('id', $userIds)
+            ->get(['id', 'first_name', 'last_name', 'avatar'])
+            ->map(fn($u) => [
+                'id'     => $u->id,
+                'name'   => trim("{$u->first_name} {$u->last_name}"),
+                'avatar' => $u->avatar,
+            ]);
+
+        return response()->json(['data' => $users]);
     }
 }

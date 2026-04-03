@@ -148,4 +148,14 @@ export const getReplies = async (commentId, lastId = null) => {
   return response.data; // array of CommentResource
 };
 
-export default { getPosts, getAllUsers, getStories, createPost, toggleLikePost, addComment, createStory };
+export async function getLikers(type: 'post' | 'comment', id: number | string): Promise<{ id: number; name: string; avatar: string | null }[]> {
+  try {
+    const res = await authFetch(`/likes/${type}/${id}/likers`);
+    return res.data?.data ?? [];
+  } catch (e) {
+    console.warn('getLikers failed', e);
+    return [];
+  }
+}
+
+export default { getPosts, getAllUsers, getStories, createPost, toggleLikePost, addComment, createStory, getLikers };
