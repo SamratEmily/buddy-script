@@ -8,9 +8,12 @@ use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class UserController extends Controller
 {
+	use AuthorizesRequests;
+
 	public function index(Request $request)
 	{
 		$perPage = (int) $request->query('per_page', 15);
@@ -40,6 +43,8 @@ class UserController extends Controller
 
 	public function update(UpdateUserRequest $request, User $user)
 	{
+		$this->authorize('update', $user);
+
 		$data = $request->validated();
 
 		foreach (['username','first_name','last_name','email','bio'] as $field) {
@@ -59,6 +64,8 @@ class UserController extends Controller
 
 	public function destroy(User $user)
 	{
+		$this->authorize('delete', $user);
+
 		$user->delete();
 		return response()->noContent();
 	}

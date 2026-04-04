@@ -18,4 +18,17 @@ class PostPolicy
     {
         return $user->id === $post->user_id;
     }
+
+    /**
+     * Determine whether the user can view the post (for comments and details).
+     * Rule: Public posts are viewable by all; private posts only by owner.
+     */
+    public function view(?User $user, Post $post)
+    {
+        if ($post->is_public) {
+            return true;
+        }
+
+        return $user && $user->id === $post->user_id;
+    }
 }

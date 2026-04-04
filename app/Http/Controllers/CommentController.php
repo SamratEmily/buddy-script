@@ -7,12 +7,16 @@ use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Resources\CommentResource;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CommentController extends Controller
 {
+    use AuthorizesRequests;
     
     public function parentComments(Request $request, Post $post)
     {
+        $this->authorize('view', $post);
+
         $lastId = $request->query('last_id');
 
         $query = $post->comments()
@@ -31,6 +35,8 @@ class CommentController extends Controller
 
     public function replies(Request $request, Comment $comment)
     {
+        $this->authorize('view', $comment->post);
+
         $perPage = 5;
         $lastId = $request->query('last_id');
        
@@ -47,6 +53,8 @@ class CommentController extends Controller
     }
     public function store(Request $request, Post $post)
     {
+        $this->authorize('view', $post);
+
         $request->validate([
             'body' => 'required|string',
             'parent_id' => 'nullable|exists:comments,id',
