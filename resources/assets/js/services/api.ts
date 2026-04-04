@@ -158,4 +158,24 @@ export async function getLikers(type: 'post' | 'comment', id: number | string): 
   }
 }
 
-export default { getPosts, getAllUsers, getStories, createPost, toggleLikePost, addComment, createStory, getLikers };
+export async function updatePost(postId: string, data: any) {
+  try {
+    const res = await authFetch(`/posts/${postId}`, { method: 'put', data });
+    return res.data;
+  } catch (e) {
+    console.warn('updatePost failed', e);
+    return null;
+  }
+}
+
+export async function deletePost(postId: string) {
+  try {
+    const res = await authFetch(`/posts/${postId}`, { method: 'delete' });
+    return res.data;
+  } catch (e) {
+    console.warn('deletePost failed', e);
+    return null;
+  }
+}
+
+export default { getPosts, getAllUsers, getStories, createPost, toggleLikePost, addComment, createStory, getLikers, updatePost, deletePost };
