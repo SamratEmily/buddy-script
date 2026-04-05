@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../../../css/bootstrap.min.css';
 import '../../../css/common.css';
 import '../../../css/main.css';
@@ -22,21 +22,57 @@ const Feed: React.FC<{ currentUser: User | null; onLogout: () => void }> = ({ cu
 
 
     const [posts, setPosts] = useState<Post[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+
+    const fetchPosts = async (lastId?: number | string) => {
+        if (loading || (!hasMore && lastId)) return;
+        setLoading(true);
+        try {
+            const fetched = await getPosts(currentUser ?? undefined, lastId);
+            if (fetched && fetched.length > 0) {
+                if (lastId) {
+                    setPosts(prev => [...prev, ...fetched]);
+                } else {
+                    setPosts(fetched);
+                }
+                if (fetched.length < 10) setHasMore(false);
+            } else {
+                setHasMore(false);
+            }
+        } catch (err) {
+            console.warn('failed to load posts', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-
-        let mounted = true;
-        (async () => {
-            try {
-                const lastId = posts[posts.length - 1]?.id;
-                const fetched = await getPosts(currentUser ?? undefined, lastId);
-                if (mounted) setPosts(fetched ?? []);
-            } catch (err) {
-                console.warn('failed to load posts', err);
-            }
-        })();
-        return () => { mounted = false };
+        fetchPosts();
     }, [currentUser]);
+
+    const handleLoadMore = () => {
+        const lastId = posts[posts.length - 1]?.id;
+        if (lastId) fetchPosts(lastId);
+    };
+
+    const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        if (!hasMore || loading) return;
+        
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                handleLoadMore();
+            }
+        }, { threshold: 1.0 });
+
+        if (loadMoreRef.current) {
+            observer.observe(loadMoreRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasMore, loading, posts.length]);
 
     const handleCreatePost = async (content: string, files?: File[], isPublic: boolean = true) => {
         if (!currentUser) {
@@ -93,16 +129,39 @@ const Feed: React.FC<{ currentUser: User | null; onLogout: () => void }> = ({ cu
 
 
                                         {/* feed area */}
+                                        {/* feed area */}
                                         {posts.length > 0 && (
                                             <PostCard
                                                 currentUser={currentUser}
                                                 posts={posts}
                                                 setPosts={setPosts}
-
                                             />
                                         )}
-                                        {posts.length === 0 && (
-                                            <p>No posts to display.</p>
+
+                                        {/* Load More Button */}
+                                        <div 
+                                            ref={loadMoreRef}
+                                            className="text-center p-4"
+                                            style={{ cursor: 'pointer', minHeight: '100px' }}
+                                            onClick={handleLoadMore}
+                                        >
+                                            {loading ? (
+                                                <div className="spinner-border text-primary" role="status">
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </div>
+                                            ) : (
+                                                hasMore ? (
+                                                    <button className="btn btn-outline-primary px-4 rounded-pill shadow-sm">
+                                                        Load More Posts
+                                                    </button>
+                                                ) : (
+                                                    <p className="text-muted small">You've reached the end of the feed.</p>
+                                                )
+                                            )}
+                                        </div>
+
+                                        {posts.length === 0 && !loading && (
+                                             <p className="text-center mt-5 text-muted">No posts available to display.</p>
                                         )}
                                     </div>
                                 </div>
