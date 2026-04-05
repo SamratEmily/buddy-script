@@ -21,11 +21,9 @@ class CommentResource extends JsonResource
                 'id'   => $this->user->id,
                 'name' => $this->user->name,
             ],
-            // 'replies_count' => $this->children()->count(),
-            // 'children' => CommentResource::collection($this->children),
             'created_at' => $this->created_at->diffForHumans(),
-            'likes_count' => $this->likes_count,
-            'liked' => $this->likes()->where('user_id', auth()->id())->exists(),
+            'likes_count' => (int) $this->likes_count,
+            'liked' => \Illuminate\Support\Facades\Redis::sismember("comment:{$this->id}:liked_users", auth()->id()) === 1,
             
         ];
     }

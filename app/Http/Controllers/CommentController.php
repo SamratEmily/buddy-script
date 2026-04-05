@@ -70,6 +70,10 @@ class CommentController extends Controller
             'likes_count' => 0,
         ]);
 
+        if (!$request->parent_id) {
+            $post->increment('comments_count');
+        }
+
        return new CommentResource($comment->load('user'));
     }
 
@@ -87,7 +91,16 @@ class CommentController extends Controller
     public function destroy(Comment $comment)
     {
         $this->authorize('delete', $comment);
+        
+        $post = $comment->post;
+        $isParent = is_null($comment->parent_id);
+        
         $comment->delete();
+
+        if ($isParent) {
+            $post->decrement('comments_count');
+        }
+
         return response()->json()->noContent();
     }
     

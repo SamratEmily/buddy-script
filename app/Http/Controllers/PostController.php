@@ -21,8 +21,6 @@ class PostController extends Controller
 
         $query = Post::with([
             'user',
-            'comments.user',
-            // 'comments.children.user',
             'likes'
         ]);
 
