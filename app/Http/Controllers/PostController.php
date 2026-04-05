@@ -19,10 +19,15 @@ class PostController extends Controller
         $lastPostId = $request->query('last_id');
         $profileUserId = $request->query('user_id'); // optional user_id for profile posts
 
+        /* 
+         * Note: For scalability (millions of posts), we use separate endpoints 
+         * like parentComments() in CommentController to load comments on-demand.
+         */
         $query = Post::with([
             'user',
             'likes'
         ]);
+
 
         if ($profileUserId) {
             // Profile feed: show only this user's posts
@@ -138,7 +143,7 @@ class PostController extends Controller
 
     public function destroy(Post $post)
     {
-        $this->authorize('delete', $post); // optional
+        $this->authorize('delete', $post); // optional: add policy
         $post->delete();
         return response()->noContent();
     }

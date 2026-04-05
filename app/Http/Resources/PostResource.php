@@ -25,7 +25,6 @@ class PostResource extends JsonResource
             'comments_count' => (int) $this->comments_count,
             'created_at' => $this->created_at->diffForHumans(),
             'is_public' => $this->is_public,
-            'comments' => CommentResource::collection($this->whenLoaded('comments')),
         ];
     }
 }
