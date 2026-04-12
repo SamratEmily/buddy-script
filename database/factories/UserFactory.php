@@ -23,19 +23,25 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
-        $faker = app(\Faker\Generator::class);
+        $firstNames = ['John', 'Jane', 'Alex', 'Emma', 'David', 'Sarah', 'Michael', 'Emily', 'Chris', 'Anna', 'Robert', 'Jessica', 'Daniel', 'Laura', 'Kevin', 'Sophia'];
+        $lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas'];
+        
+        $firstName = $firstNames[array_rand($firstNames)];
+        $lastName = $lastNames[array_rand($lastNames)];
+        $email = strtolower($firstName . '.' . $lastName . '.' . rand(100, 999) . '@example.com');
+
         return [
             'uuid' => (string) \Illuminate\Support\Str::uuid(),
-            'first_name' => $faker->firstName(),
-            'last_name' => $faker->lastName(),
-            'email' => $faker->unique()->safeEmail(),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $email,
             'password' => static::$password ??= Hash::make('password'),
             'avatar' => null,
             'cover_photo' => null,
-            'bio' => $faker->optional()->sentence(),
-            'is_verified' => $faker->boolean(20),
+            'bio' => 'This is a demo biography for ' . $firstName . '.',
+            'is_verified' => rand(0, 10) > 8,
             'last_seen' => now(),
-            'remember_token' => Str::random(10),
+            'remember_token' => \Illuminate\Support\Str::random(10),
         ];
     }
 }

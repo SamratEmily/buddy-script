@@ -13,11 +13,23 @@ class CommentFactory extends Factory
 
     public function definition(): array
     {
-        $faker = app(\Faker\Generator::class);
+        $comments = [
+            "Great post! Thanks for sharing.",
+            "I totally agree with this.",
+            "Wow, interesting perspective.",
+            "Could you tell me more about this?",
+            "Haha, so true!",
+            "Nice one!",
+            "I'm not so sure about that, but okay.",
+            "Perfectly said.",
+            "Indeed!",
+            "Bookmarking this for later."
+        ];
+
         return [
             'post_id' => Post::factory(),
             'user_id' => User::factory(),
-            'body' => $faker->sentence(),
+            'body' => $comments[array_rand($comments)],
             'parent_id' => null,
             'likes_count' => 0,
             'created_at' => now(),
