@@ -28,7 +28,10 @@ class UserFactory extends Factory
         
         $firstName = $firstNames[array_rand($firstNames)];
         $lastName = $lastNames[array_rand($lastNames)];
-        $email = strtolower($firstName . '.' . $lastName . '.' . rand(100, 999) . '@example.com');
+        
+        // Ensure email uniqueness with a large random number and a unique string
+        $uniqueId = \Illuminate\Support\Str::random(5);
+        $email = strtolower($firstName . '.' . $lastName . '.' . $uniqueId . '.' . rand(10000, 99999) . '@example.com');
 
         return [
             'uuid' => (string) \Illuminate\Support\Str::uuid(),
