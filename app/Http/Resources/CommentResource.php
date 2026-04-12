@@ -23,7 +23,7 @@ class CommentResource extends JsonResource
             ],
             'created_at' => $this->created_at->diffForHumans(),
             'likes_count' => (int) $this->likes_count,
-            'liked' => \Illuminate\Support\Facades\Redis::sismember("comment:{$this->id}:liked_users", auth()->id()) === 1,
+            'liked' => auth()->check() ? $this->likes()->where('user_id', auth()->id())->exists() : false,
             
         ];
     }

@@ -27,38 +27,37 @@ class LikeController extends Controller
             ? Post::findOrFail($likeableId)
             : Comment::findOrFail($likeableId);
 
-        $type = $likeable::class;
+        $type = get_class($likeable);
 
-        // Redis keys
-        $likesSetKey = "{$likeableType}:{$likeable->id}:liked_users";
-        $likesCountKey = "{$likeableType}:{$likeable->id}:likes_count";
+        // Check if user already liked
+        $existingLike = \App\Models\Like::where([
+            'user_id' => $userId,
+            'likeable_id' => $likeableId,
+            'likeable_type' => $type,
+        ])->first();
 
-        // Ensure counter is initialized in Redis
-        Redis::setnx($likesCountKey, $likeable->likes_count);
-
-        // Check if user already liked (O(1) Redis set)
-        $alreadyLiked = Redis::sismember($likesSetKey, $userId);
-
-        if ($alreadyLiked) {
+        if ($existingLike) {
             // Unlike
-            Redis::srem($likesSetKey, $userId);   // remove user from set
-            Redis::decr($likesCountKey);          // decrement counter
-            ToggleLikeJob::dispatchAfterResponse($likeable, $userId, false); // DB update
+            $existingLike->delete();
+            $likeable->decrement('likes_count');
             $liked = false;
-
         } else {
             // Like
-            Redis::sadd($likesSetKey, $userId);   // add user to set
-            Redis::incr($likesCountKey);          // increment counter
-            ToggleLikeJob::dispatchAfterResponse($likeable, $userId, true); // DB update
+            \App\Models\Like::create([
+                'user_id' => $userId,
+                'likeable_id' => $likeableId,
+                'likeable_type' => $type,
+            ]);
+            $likeable->increment('likes_count');
             $liked = true;
         }
         
         return response()->json([
             'liked' => $liked,
-            'likes_count' => Redis::get($likesCountKey),
+            'likes_count' => $likeable->fresh()->likes_count,
         ]);
     }
+
     public function likers(Request $request, string $type, int $id)
     {
         // Validate type
@@ -66,16 +65,8 @@ class LikeController extends Controller
             return response()->json(['error' => 'Invalid likeable type'], 422);
         }
 
-        $likesSetKey = "{$type}:{$id}:liked_users";
-
-        // Try Redis first (fast path)
-        $userIds = Redis::smembers($likesSetKey);
-
-        if (empty($userIds)) {
-            // Fall back to DB if Redis has no data (e.g. after restart)
-            $model = $type === 'post' ? Post::findOrFail($id) : Comment::findOrFail($id);
-            $userIds = $model->likes()->pluck('user_id')->toArray();
-        }
+        $model = $type === 'post' ? Post::findOrFail($id) : Comment::findOrFail($id);
+        $userIds = $model->likes()->pluck('user_id')->toArray();
 
         if (empty($userIds)) {
             return response()->json(['data' => []]);
