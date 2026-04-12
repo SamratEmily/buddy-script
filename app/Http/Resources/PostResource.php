@@ -21,7 +21,7 @@ class PostResource extends JsonResource
                 'name' => $this->user->name,
             ],
             'likes_count' => (int) $this->likes_count,
-            'liked' => \Illuminate\Support\Facades\Redis::sismember("post:{$this->id}:liked_users", auth()->id()) === 1,
+            'liked' => auth()->check() ? $this->likes->contains('user_id', auth()->id()) : false,
             'comments_count' => (int) $this->comments_count,
             'created_at' => $this->created_at->diffForHumans(),
             'is_public' => $this->is_public,
