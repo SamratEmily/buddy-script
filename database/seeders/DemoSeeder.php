@@ -15,11 +15,12 @@ class DemoSeeder extends Seeder
     {
         // Clean up existing data except the main user
         echo "Cleaning up old demo data...\n";
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        
+        // Delete in order to respect Foreign Key constraints (Children first)
+        \App\Models\Like::query()->delete();
         Comment::query()->delete();
         Post::query()->delete();
         User::query()->where('email', '!=', 'nayakemily50@gmail.com')->delete();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // 1. Create or get the main user
         $mainUser = User::firstOrCreate(
