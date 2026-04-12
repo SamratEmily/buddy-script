@@ -23,16 +23,17 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $faker = app(\Faker\Generator::class);
         return [
             'uuid' => (string) \Illuminate\Support\Str::uuid(),
-            'first_name' => $this->faker->firstName(),
-            'last_name' => $this->faker->lastName(),
-            'email' => $this->faker->unique()->safeEmail(),
+            'first_name' => $faker->firstName(),
+            'last_name' => $faker->lastName(),
+            'email' => $faker->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
             'avatar' => null,
             'cover_photo' => null,
-            'bio' => $this->faker->optional()->sentence(),
-            'is_verified' => $this->faker->boolean(20),
+            'bio' => $faker->optional()->sentence(),
+            'is_verified' => $faker->boolean(20),
             'last_seen' => now(),
             'remember_token' => Str::random(10),
         ];

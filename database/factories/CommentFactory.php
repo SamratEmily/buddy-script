@@ -13,10 +13,11 @@ class CommentFactory extends Factory
 
     public function definition(): array
     {
+        $faker = app(\Faker\Generator::class);
         return [
             'post_id' => Post::factory(),
             'user_id' => User::factory(),
-            'body' => $this->faker->sentence(),
+            'body' => $faker->sentence(),
             'parent_id' => null,
             'likes_count' => 0,
             'created_at' => now(),

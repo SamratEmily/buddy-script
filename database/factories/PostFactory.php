@@ -12,14 +12,15 @@ class PostFactory extends Factory
 
     public function definition(): array
     {
+        $faker = app(\Faker\Generator::class);
         return [
             'user_id' => User::factory(),
-            'body' => $this->faker->paragraphs(2, true),
+            'body' => $faker->paragraphs(2, true),
             'image_path' => null,
             'is_public' => true,
             'likes_count' => 0,
             'comments_count' => 0,
-            'created_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
+            'created_at' => $faker->dateTimeBetween('-1 month', 'now'),
             'updated_at' => now(),
         ];
     }
