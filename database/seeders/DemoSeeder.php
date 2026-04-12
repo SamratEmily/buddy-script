@@ -51,10 +51,24 @@ class DemoSeeder extends Seeder
 
         foreach ($sampledPosts as $post) {
             $numComments = rand(2, 8);
-            Comment::factory()->count($numComments)->create([
+            $comments = Comment::factory()->count($numComments)->create([
                 'post_id' => $post->id,
                 'user_id' => $allUsers->random()->id,
+                'parent_id' => null,
             ]);
+
+            // Add replies to some comments
+            foreach ($comments as $comment) {
+                if (rand(0, 1)) { // 50% chance to have replies
+                    $numReplies = rand(1, 3);
+                    Comment::factory()->count($numReplies)->create([
+                        'post_id' => $post->id,
+                        'user_id' => $allUsers->random()->id,
+                        'parent_id' => $comment->id,
+                    ]);
+                    $numComments += $numReplies;
+                }
+            }
             
             // Update counter cache
             $post->update(['comments_count' => $numComments]);
