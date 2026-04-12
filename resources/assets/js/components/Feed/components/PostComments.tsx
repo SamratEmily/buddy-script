@@ -13,7 +13,7 @@ const PostComments = ({ post, openMainCommentBox }) => {
   const [likersModal, setLikersModal] = useState<{ type: 'comment'; id: number | string } | null>(null);
 
 const handleLikeToggle = async (likeable_id, likeable_type) => {
-  console.log('Toggling like for', likeable_type, 'with ID', likeable_id);
+  // console.log('Toggling like for', likeable_type, 'with ID', likeable_id);
   const res = await likeToggle(likeable_id, likeable_type);
   if (!res) return;
 
@@ -162,7 +162,7 @@ const Comment = ({ comment, postId, handleCommentSubmit, handleLikeToggle, onOpe
     setLoadingReplies(true);
 
     const topLevelId = comment.parent_id ?? comment.id;
-    console.log("Fetching replies for topLevelId:", topLevelId, "lastReplyId:", lastReplyId);
+    // console.log("Fetching replies for topLevelId:", topLevelId, "lastReplyId:", lastReplyId);
     const res = await getReplies(topLevelId, lastReplyId); // backend should support lastReplyId for pagination
 
     if (res && res.data?.length) {
@@ -181,7 +181,7 @@ const Comment = ({ comment, postId, handleCommentSubmit, handleLikeToggle, onOpe
     const topLevelId = comment.parent_id ?? comment.id;
 
     const res = await handleCommentSubmit(postId, topLevelId, replyText);
-    console.log(res.data.id);
+    // console.log(res.data.id);
     if (res) {
 
       setReplyText("");

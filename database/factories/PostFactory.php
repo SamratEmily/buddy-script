@@ -14,12 +14,12 @@ class PostFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'body' => fake()->paragraphs(2, true),
+            'body' => $this->faker->paragraphs(2, true),
             'image_path' => null,
             'is_public' => true,
             'likes_count' => 0,
             'comments_count' => 0,
-            'created_at' => fake()->dateTimeBetween('-1 month', 'now'),
+            'created_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
             'updated_at' => now(),
         ];
     }

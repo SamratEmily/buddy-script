@@ -25,14 +25,14 @@ class UserFactory extends Factory
     {
         return [
             'uuid' => (string) \Illuminate\Support\Str::uuid(),
-            'first_name' => fake()->firstName(),
-            'last_name' => fake()->lastName(),
-            'email' => fake()->unique()->safeEmail(),
+            'first_name' => $this->faker->firstName(),
+            'last_name' => $this->faker->lastName(),
+            'email' => $this->faker->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
             'avatar' => null,
             'cover_photo' => null,
-            'bio' => fake()->optional()->sentence(),
-            'is_verified' => fake()->boolean(20),
+            'bio' => $this->faker->optional()->sentence(),
+            'is_verified' => $this->faker->boolean(20),
             'last_seen' => now(),
             'remember_token' => Str::random(10),
         ];
