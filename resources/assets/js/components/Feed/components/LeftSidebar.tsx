@@ -38,7 +38,7 @@ const LeftSidebar: React.FC = () => {
               </li>
               <li className="_left_inner_area_explore_item">
                 <a href="group.html" className="_left_inner_area_explore_link">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="feather feather-users"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Group</a>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-users"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Group</a>
               </li>
               <li className="_left_inner_area_explore_item _explore_item">
                 <a href="#0" className="_left_inner_area_explore_link">
@@ -54,7 +54,7 @@ const LeftSidebar: React.FC = () => {
               </li>
               <li className="_left_inner_area_explore_item">
                 <a href="#0" className="_left_inner_area_explore_link">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="feather feather-save"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-save"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                   Save post</a>
               </li>
             </ul>
@@ -129,46 +129,50 @@ const LeftSidebar: React.FC = () => {
                 See all
               </a>
             </div>
-            <a className="_left_inner_event_card_link" href="event-single.html">
+            <div className="_left_inner_event_card_link">
               <div className="_left_inner_event_card">
-                <div className="_left_inner_event_card_iamge">
-                  <img src={feedEvent1Img} alt="Image" className="_card_img" />
-                </div>
-                <div className="_left_inner_event_card_content">
-                  <div className="_left_inner_card_date">
-                    <p className="_left_inner_card_date_para">10</p>
-                    <p className="_left_inner_card_date_para1">Jul</p>
+                <a href="event-single.html" style={{ color: 'inherit', textDecoration: 'none' }}>
+                  <div className="_left_inner_event_card_iamge">
+                    <img src={feedEvent1Img} alt="Image" className="_card_img" />
                   </div>
-                  <div className="_left_inner_card_txt">
-                    <h4 className="_left_inner_event_card_title">No more terrorism no more cry</h4>
+                  <div className="_left_inner_event_card_content">
+                    <div className="_left_inner_card_date">
+                      <p className="_left_inner_card_date_para">10</p>
+                      <p className="_left_inner_card_date_para1">Jul</p>
+                    </div>
+                    <div className="_left_inner_card_txt">
+                      <h4 className="_left_inner_event_card_title">No more terrorism no more cry</h4>
+                    </div>
                   </div>
-                </div>
+                </a>
                 <hr className="_underline" />
                 <div className="_left_inner_event_bottom">
                   <p className="_left_iner_event_bottom">17 People Going</p> <a href="#0" className="_left_iner_event_bottom_link">Going</a>
                 </div>
               </div>
-            </a>
-            <a className="_left_inner_event_card_link" href="event-single.html">
+            </div>
+            <div className="_left_inner_event_card_link">
               <div className="_left_inner_event_card">
-                <div className="_left_inner_event_card_iamge">
-                  <img src={feedEvent1Img} alt="Image" className="_card_img" />
-                </div>
-                <div className="_left_inner_event_card_content">
-                  <div className="_left_inner_card_date">
-                    <p className="_left_inner_card_date_para">10</p>
-                    <p className="_left_inner_card_date_para1">Jul</p>
+                <a href="event-single.html" style={{ color: 'inherit', textDecoration: 'none' }}>
+                  <div className="_left_inner_event_card_iamge">
+                    <img src={feedEvent1Img} alt="Image" className="_card_img" />
                   </div>
-                  <div className="_left_inner_card_txt">
-                    <h4 className="_left_inner_event_card_title">No more terrorism no more cry</h4>
+                  <div className="_left_inner_event_card_content">
+                    <div className="_left_inner_card_date">
+                      <p className="_left_inner_card_date_para">10</p>
+                      <p className="_left_inner_card_date_para1">Jul</p>
+                    </div>
+                    <div className="_left_inner_card_txt">
+                      <h4 className="_left_inner_event_card_title">No more terrorism no more cry</h4>
+                    </div>
                   </div>
-                </div>
+                </a>
                 <hr className="_underline" />
                 <div className="_left_inner_event_bottom">
                   <p className="_left_iner_event_bottom">17 People Going</p> <a href="#0" className="_left_iner_event_bottom_link">Going</a>
                 </div>
               </div>
-            </a>
+            </div>
           </div>
         </div>
       </div>

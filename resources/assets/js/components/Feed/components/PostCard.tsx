@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { message } from 'antd';
 import postImg from '../../../../images/post_img.png';
 import timelineImg from '../../../../images/timeline_img.png';
 import reactImg1 from '../../../../images/react_img1.png';
@@ -33,6 +34,7 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
     const [editingPostId, setEditingPostId] = useState<number | string | null>(null);
     const [editContent, setEditContent] = useState("");
     const [loading, setLoading] = useState(false);
+    const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
     const [openComment, setOpenComment] = useState(false);
     const [likersModal, setLikersModal] = useState<{ type: 'post' | 'comment'; id: number | string } | null>(null);
 
@@ -45,54 +47,64 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
     };
 
     const handleLikeToggle = async (likeable_id: number | string, likeable_type: 'post' | 'comment') => {
-        console.log('Toggling like for', likeable_type, 'with ID', likeable_id);
-        const res = await likeToggle(likeable_id, likeable_type);
-        if (likeable_type === 'post') { // post
-            setPosts(prevPosts =>
-                prevPosts.map(post =>
-                    post.id === likeable_id
-                        ? {
-                            ...post,
-                            liked: res?.liked,
-                            likes_count: res?.likes_count,
-                        }
-                        : post
-                )
-            );
-        } else if (likeable_type === 'comment') {
-            setPosts(prevPosts =>
-                prevPosts.map(post => ({
-                    ...post,
-                    comments: post.comments?.map(comment =>
-                        comment.id === likeable_id
+        const key = `${likeable_type}-${likeable_id}`;
+        if (likeLoading[key]) return;
+
+        setLikeLoading(prev => ({ ...prev, [key]: true }));
+        try {
+            const res = await likeToggle(likeable_id, likeable_type);
+            if (likeable_type === 'post') { // post
+                setPosts(prevPosts =>
+                    prevPosts.map(post =>
+                        post.id === likeable_id
                             ? {
-                                ...comment,
+                                ...post,
                                 liked: res?.liked,
                                 likes_count: res?.likes_count,
                             }
-                            : comment
+                            : post
                     )
-                }))
-            );
+                );
+            } else if (likeable_type === 'comment') {
+                setPosts(prevPosts =>
+                    prevPosts.map(post => ({
+                        ...post,
+                        comments: post.comments?.map(comment =>
+                            comment.id === likeable_id
+                                ? {
+                                    ...comment,
+                                    liked: res?.liked,
+                                    likes_count: res?.likes_count,
+                                }
+                                : comment
+                        )
+                    }))
+                );
+            }
+        } catch (err) {
+            message.error("Failed to update like. Please try again.");
+        } finally {
+            setLikeLoading(prev => ({ ...prev, [key]: false }));
         }
-
     };
 
     const handlePrivacyChange = async (postId: number | string, value: string) => {
-
-        const res = await privacyChange(postId.toString(), value === "1");
-        const updatedPost = res?.data ?? res.data?.data ?? null;
-        if (updatedPost) {
-            setPosts(prev =>
-                prev.map(post =>
-                    post.id === updatedPost.id
-                        ? { ...post, is_public: updatedPost.is_public } // only update public
-                        : post
-                )
-            );
+        try {
+            const res = await privacyChange(postId.toString(), value === "1");
+            const updatedPost = res?.data ?? res.data?.data ?? null;
+            if (updatedPost) {
+                setPosts(prev =>
+                    prev.map(post =>
+                        post.id === updatedPost.id
+                            ? { ...post, is_public: updatedPost.is_public } // only update public
+                            : post
+                    )
+                );
+                message.success("Privacy updated successfully");
+            }
+        } catch (err) {
+            message.error("Failed to update privacy");
         }
-
-
     }
 
     const handleAddComment = async (postId: number | string, comment: string) => {
@@ -109,8 +121,9 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
         try {
             await deletePost(postId.toString());
             setPosts(prev => prev.filter(p => p.id !== postId));
+            message.success("Post deleted successfully");
         } catch (err) {
-            console.error('delete post failed', err);
+            message.error("Failed to delete post");
         }
     };
 
@@ -121,15 +134,20 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
     };
 
     const handleSaveEdit = async (postId: number | string) => {
+        if (loading) return;
+        setLoading(true);
         try {
             const res = await updatePost(postId.toString(), { body: editContent });
             const updatedPost = res?.data ?? res;
             if (updatedPost) {
                 setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: updatedPost.body || updatedPost.content } : p));
                 setEditingPostId(null);
+                message.success("Post updated successfully");
             }
         } catch (err) {
-            console.error('update post failed', err);
+            message.error("Failed to update post");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -187,7 +205,7 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
                                             <a href="#0" className="_feed_timeline_dropdown_link">
                                                 <span>
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 18 18">
-                                                        <path stroke="#1890FF" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M14.25 15.75L9 12l-5.25 3.75v-12a1.5 1.5 0 011.5-1.5h7.5a1.5 1.5 0 011.5 1.5v12z" />
+                                                        <path stroke="#1890FF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M14.25 15.75L9 12l-5.25 3.75v-12a1.5 1.5 0 011.5-1.5h7.5a1.5 1.5 0 011.5 1.5v12z" />
                                                     </svg>
                                                 </span>
                                                 Save Post
@@ -199,8 +217,8 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
                                                     <a href="#0" className="_feed_timeline_dropdown_link" onClick={(e) => { e.preventDefault(); handleEditPost(post); }}>
                                                         <span>
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 18 18">
-                                                                <path stroke="#1890FF" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M8.25 3H3a1.5 1.5 0 00-1.5 1.5V15A1.5 1.5 0 003 16.5h10.5A1.5 1.5 0 0015 15V9.75" />
-                                                                <path stroke="#1890FF" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M13.875 1.875a1.591 1.591 0 112.25 2.25L9 11.25 6 12l.75-3 7.125-7.125z" />
+                                                                <path stroke="#1890FF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M8.25 3H3a1.5 1.5 0 00-1.5 1.5V15A1.5 1.5 0 003 16.5h10.5A1.5 1.5 0 0015 15V9.75" />
+                                                                <path stroke="#1890FF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M13.875 1.875a1.591 1.591 0 112.25 2.25L9 11.25 6 12l.75-3 7.125-7.125z" />
                                                             </svg>
                                                         </span>
                                                         Edit Post
@@ -210,7 +228,7 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
                                                     <a href="#0" className="_feed_timeline_dropdown_link" onClick={(e) => { e.preventDefault(); handleDeletePost(post.id); }}>
                                                         <span>
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 18 18">
-                                                                <path stroke="#1890FF" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M2.25 4.5h13.5M6 4.5V3a1.5 1.5 0 011.5-1.5h3A1.5 1.5 0 0112 3v1.5m2.25 0V15a1.5 1.5 0 01-1.5 1.5h-7.5a1.5 1.5 0 01-1.5-1.5V4.5h10.5zM7.5 8.25v4.5M10.5 8.25v4.5" />
+                                                                <path stroke="#1890FF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M2.25 4.5h13.5M6 4.5V3a1.5 1.5 0 011.5-1.5h3A1.5 1.5 0 0112 3v1.5m2.25 0V15a1.5 1.5 0 01-1.5 1.5h-7.5a1.5 1.5 0 01-1.5-1.5V4.5h10.5zM7.5 8.25v4.5M10.5 8.25v4.5" />
                                                             </svg>
                                                         </span>
                                                         Delete Post
@@ -311,7 +329,7 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
                             <span className="_feed_inner_timeline_reaction_link"> <span>
                                 <svg className="_reaction_svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="none" viewBox="0 0 21 21">
                                     <path stroke="#000" d="M1 10.5c0-.464 0-.696.009-.893A9 9 0 019.607 1.01C9.804 1 10.036 1 10.5 1v0c.464 0 .696 0 .893.009a9 9 0 018.598 8.598c.009.197.009.429.009.893v6.046c0 1.36 0 2.041-.317 2.535a2 2 0 01-.602.602c-.494.317-1.174.317-2.535.317H10.5c-.464 0-.696 0-.893-.009a9 9 0 01-8.598-8.598C1 11.196 1 10.964 1 10.5v0z" />
-                                    <path stroke="#000" stroke-linecap="round" stroke-linejoin="round" d="M6.938 9.313h7.125M10.5 14.063h3.563" />
+                                    <path stroke="#000" strokeLinecap="round" strokeLinejoin="round" d="M6.938 9.313h7.125M10.5 14.063h3.563" />
                                 </svg>
                                 Comment
                             </span>
@@ -320,7 +338,7 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
                         <button className="_feed_inner_timeline_reaction_share _feed_reaction">
                             <span className="_feed_inner_timeline_reaction_link"> <span>
                                 <svg className="_reaction_svg" xmlns="http://www.w3.org/2000/svg" width="24" height="21" fill="none" viewBox="0 0 24 21">
-                                    <path stroke="#000" stroke-linejoin="round" d="M23 10.5L12.917 1v5.429C3.267 6.429 1 13.258 1 20c2.785-3.52 5.248-5.429 11.917-5.429V20L23 10.5z" />
+                                    <path stroke="#000" strokeLinejoin="round" d="M23 10.5L12.917 1v5.429C3.267 6.429 1 13.258 1 20c2.785-3.52 5.248-5.429 11.917-5.429V20L23 10.5z" />
                                 </svg>
                                 Share
                             </span>

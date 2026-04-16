@@ -29,7 +29,7 @@ const Stories: React.FC = () => {
                            <div className="_feed_inner_story_btn">
                               <button className="_feed_inner_story_btn_link">
                                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 10 10">
-                                    <path stroke="#fff" stroke-linecap="round" d="M.5 4.884h9M4.884 9.5v-9" />
+                                    <path stroke="#fff" strokeLinecap="round" d="M.5 4.884h9M4.884 9.5v-9" />
                                  </svg>
                               </button>
                            </div>
@@ -91,7 +91,7 @@ const Stories: React.FC = () => {
                            <div className="_feed_inner_ppl_btn">
                               <button className="_feed_inner_ppl_btn_link" type="button">
                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 12 12">
-                                    <path stroke="#fff" stroke-linecap="round" stroke-linejoin="round" d="M6 2.5v7M2.5 6h7" />
+                                    <path stroke="#fff" strokeLinecap="round" strokeLinejoin="round" d="M6 2.5v7M2.5 6h7" />
                                  </svg>
                               </button>
                            </div>
@@ -117,12 +117,10 @@ const Stories: React.FC = () => {
                   </li>
                   <li className="_feed_inner_ppl_card_area_item">
                      <a href="#0" className="_feed_inner_ppl_card_area_link">
-                        <a href="#0" className="_feed_inner_ppl_card_area_link">
-                           <div className="_feed_inner_ppl_card_area_story_active">
-                              <img src={mobileStoryImg1} alt="Image" className="_card_story_img1" />
-                           </div>
-                           <p className="_feed_inner_ppl_card_area_txt">Ryan...</p>
-                        </a>
+                        <div className="_feed_inner_ppl_card_area_story_active">
+                           <img src={mobileStoryImg1} alt="Image" className="_card_story_img1" />
+                        </div>
+                        <p className="_feed_inner_ppl_card_area_txt">Ryan...</p>
                      </a>
                   </li>
                   <li className="_feed_inner_ppl_card_area_item">
@@ -135,12 +133,10 @@ const Stories: React.FC = () => {
                   </li>
                   <li className="_feed_inner_ppl_card_area_item">
                      <a href="#0" className="_feed_inner_ppl_card_area_link">
-                        <a href="#0" className="_feed_inner_ppl_card_area_link">
-                           <div className="_feed_inner_ppl_card_area_story_active">
-                              <img src={mobileStoryImg1} alt="Image" className="_card_story_img1" />
-                           </div>
-                           <p className="_feed_inner_ppl_card_area_txt">Ryan...</p>
-                        </a>
+                        <div className="_feed_inner_ppl_card_area_story_active">
+                           <img src={mobileStoryImg1} alt="Image" className="_card_story_img1" />
+                        </div>
+                        <p className="_feed_inner_ppl_card_area_txt">Ryan...</p>
                      </a>
                   </li>
                   {/**/}
