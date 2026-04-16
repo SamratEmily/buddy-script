@@ -15,7 +15,7 @@ class CommentResource extends JsonResource
                 is_array($this->image_path)
                 ? $this->image_path
                 : json_decode($this->image_path, true) ?? [$this->image_path]
-            )->map(fn($img) => $img ? asset("storage/$img") : null)->filter()->values(),
+            )->map(fn($img) => $img ? \Illuminate\Support\Facades\Storage::url($img) : null)->filter()->values(),
             'parent_id' => $this->parent_id,
             'author'  => [
                 'id'   => $this->user->id,
