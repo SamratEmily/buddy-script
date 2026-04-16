@@ -35,8 +35,8 @@ const PostItem: React.FC<{
     const [editingPostId, setEditingPostId] = useState<number | string | null>(null);
     const [editContent, setEditContent] = useState("");
     const [loading, setLoading] = useState(false);
-    const [openComment, setOpenComment] = useState(false);
     const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
+    const [openComment, setOpenComment] = useState(false);
 
     const toggleDropdown = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -52,55 +52,96 @@ const PostItem: React.FC<{
         setLikeLoading(prev => ({ ...prev, [key]: true }));
         try {
             const res = await likeToggle(likeable_id, likeable_type);
-            if (likeable_type === 'post') {
-                setPosts(prev => prev.map(p => p.id === likeable_id ? { ...p, liked: res?.liked, likes_count: res?.likes_count } : p));
-            } else {
-                setPosts(prev => prev.map(p => ({
-                    ...p,
-                    comments: p.comments?.map(c => c.id === likeable_id ? { ...c, liked: res?.liked, likes_count: res?.likes_count } : c)
-                })));
+            if (likeable_type === 'post') { // post
+                setPosts(prevPosts =>
+                    prevPosts.map(post =>
+                        post.id === likeable_id
+                            ? {
+                                ...post,
+                                liked: res?.liked,
+                                likes_count: res?.likes_count,
+                            }
+                            : post
+                    )
+                );
+            } else if (likeable_type === 'comment') {
+                setPosts(prevPosts =>
+                    prevPosts.map(post => ({
+                        ...post,
+                        comments: post.comments?.map(comment =>
+                            comment.id === likeable_id
+                                ? {
+                                    ...comment,
+                                    liked: res?.liked,
+                                    likes_count: res?.likes_count,
+                                }
+                                : comment
+                        )
+                    }))
+                );
             }
         } catch (err) {
-            message.error("Failed to update like.");
+            message.error("Failed to update like. Please try again.");
         } finally {
             setLikeLoading(prev => ({ ...prev, [key]: false }));
         }
     };
 
-    const handlePrivacyChange = async (val: string) => {
+    const handlePrivacyChange = async (postId: number | string, value: string) => {
         try {
-            const res = await privacyChange(post.id.toString(), val === "1");
-            const updated = res?.data ?? res.data?.data;
-            if (updated) {
-                setPosts(prev => prev.map(p => p.id === updated.id ? { ...p, is_public: updated.is_public } : p));
-                message.success("Privacy updated");
+            const res = await privacyChange(postId.toString(), value === "1");
+            const updatedPost = res?.data ?? res.data?.data ?? null;
+            if (updatedPost) {
+                setPosts(prev =>
+                    prev.map(post =>
+                        post.id === updatedPost.id
+                            ? { ...post, is_public: updatedPost.is_public } // only update public
+                            : post
+                    )
+                );
+                message.success("Privacy updated successfully");
             }
         } catch (err) {
             message.error("Failed to update privacy");
         }
+    }
+
+    const handleAddComment = async (postId: number | string, comment: string) => {
+        try {
+            const res = await addComment(postId.toString(), comment);
+        }
+        catch (err) {
+            console.error('add comment failed', err);
+        }
     };
 
-    const handleDelete = async () => {
-        if (!window.confirm("Are you sure?")) return;
+    const handleDeletePost = async (postId: number | string) => {
+        if (!window.confirm("Are you sure you want to delete this post?")) return;
         try {
-            await deletePost(post.id.toString());
-            setPosts(prev => prev.filter(p => p.id !== post.id));
-            message.success("Post deleted");
+            await deletePost(postId.toString());
+            setPosts(prev => prev.filter(p => p.id !== postId));
+            message.success("Post deleted successfully");
         } catch (err) {
             message.error("Failed to delete post");
         }
     };
 
-    const handleSaveEdit = async () => {
+    const handleEditPost = (post: Post) => {
+        setEditingPostId(post.id);
+        setEditContent(post.content || "");
+        setOpenPostId(null);
+    };
+
+    const handleSaveEdit = async (postId: number | string) => {
         if (loading) return;
         setLoading(true);
         try {
-            const res = await updatePost(post.id.toString(), { body: editContent });
-            const updated = res?.data ?? res;
-            if (updated) {
-                setPosts(prev => prev.map(p => p.id === post.id ? { ...p, content: updated.body || updated.content } : p));
+            const res = await updatePost(postId.toString(), { body: editContent });
+            const updatedPost = res?.data ?? res;
+            if (updatedPost) {
+                setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: updatedPost.body || updatedPost.content } : p));
                 setEditingPostId(null);
-                message.success("Post updated");
+                message.success("Post updated successfully");
             }
         } catch (err) {
             message.error("Failed to update post");

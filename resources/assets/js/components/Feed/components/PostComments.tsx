@@ -3,48 +3,63 @@ import txtImg from "../../../../images/txt_img.png";
 import commentImg from "../../../../images/comment_img.png";
 import { addComment, getParentComments, getReplies, likeToggle } from "../../../services/api";
 import LikersModal from "./LikersModal";
+import { message } from "antd";
 
 const PostComments = ({ post, openMainCommentBox }) => {
   const [comments, setComments] = useState([]); // top-level comments
   const [lastParentId, setLastParentId] = useState(null);
   const [loadingParents, setLoadingParents] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
   const [newComment, setNewComment] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [likersModal, setLikersModal] = useState<{ type: 'comment'; id: number | string } | null>(null);
 
 const handleLikeToggle = async (likeable_id, likeable_type) => {
-  // console.log('Toggling like for', likeable_type, 'with ID', likeable_id);
-  const res = await likeToggle(likeable_id, likeable_type);
-  if (!res) return;
+  if (likeLoading[likeable_id]) return;
+  setLikeLoading(prev => ({ ...prev, [likeable_id]: true }));
+  try {
+    const res = await likeToggle(likeable_id, likeable_type);
+    if (!res) return;
 
-  // Recursive function to update nested comments/replies
-  const updateComments = (commentsList) => {
-    return commentsList.map((comment) => {
-      if (comment.id === likeable_id && likeable_type === "comment") {
-        return { ...comment, liked: res.liked, likes_count: res.likes_count };
-      } else if (comment.replies?.length) {
-        return { ...comment, replies: updateComments(comment.replies) };
-      }
-      return comment;
-    });
-  };
+    // Recursive function to update nested comments/replies
+    const updateComments = (commentsList) => {
+      return commentsList.map((comment) => {
+        if (comment.id === likeable_id && likeable_type === "comment") {
+          return { ...comment, liked: res.liked, likes_count: res.likes_count };
+        } else if (comment.replies?.length) {
+          return { ...comment, replies: updateComments(comment.replies) };
+        }
+        return comment;
+      });
+    };
 
-  setComments((prev) => updateComments(prev));
+    setComments((prev) => updateComments(prev));
+  } catch (err) {
+    message.error("Failed to like comment");
+  } finally {
+    setLikeLoading(prev => ({ ...prev, [likeable_id]: false }));
+  }
 };
 
 
   const fetchParents = async () => {
     if (loadingParents) return;
     setLoadingParents(true);
-    const res = await getParentComments(post.id, lastParentId);
-    if (res && res.data?.length) {
-      setComments((prev) => {
-        const unique = res.data.filter(c => !prev.some(p => p.id === c.id));
-        return [...prev, ...unique];
-      });
-      setLastParentId(res.data[res.data.length - 1].id);
+    try {
+      const res = await getParentComments(post.id, lastParentId);
+      if (res && res.data?.length) {
+        setComments((prev) => {
+          const unique = res.data.filter(c => !prev.some(p => p.id === c.id));
+          return [...prev, ...unique];
+        });
+        setLastParentId(res.data[res.data.length - 1].id);
+      }
+    } catch (err) {
+      message.error("Failed to load comments");
+    } finally {
+      setLoadingParents(false);
     }
-    setLoadingParents(false);
   };
 
   useEffect(() => {
@@ -56,24 +71,31 @@ const handleLikeToggle = async (likeable_id, likeable_type) => {
 
   const handleCommentSubmit = async (postId, parentId, body, file = null) => {
     if (!body.trim() && !file) return;
+    if (submitting) return;
 
-    const res = await addComment(postId, body, parentId, file);
-    if (!res) return;
+    setSubmitting(true);
+    try {
+      const res = await addComment(postId, body, parentId, file);
+      if (!res) return;
 
-    if (!parentId) {
-      
-      setComments((prev) => [{ ...res.data, replies: [], showReplies: false, lastReplyId: null }, ...prev]);
-    } else {
-      setComments((prev) =>
-        prev.map((c) =>
-          c.id === parentId
-            ? { ...c, replies: [...(c.replies || []), res] }
-            : c
-        )
-      );
+      if (!parentId) {
+        setComments((prev) => [{ ...res.data, replies: [], showReplies: false, lastReplyId: null }, ...prev]);
+      } else {
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === parentId
+              ? { ...c, replies: [...(c.replies || []), res.data] }
+              : c
+          )
+        );
+      }
+      message.success("Comment posted!");
+      return res;
+    } catch (err) {
+      message.error("Failed to post comment");
+    } finally {
+      setSubmitting(false);
     }
-    return res;
-
   };
 
   const handleMainSubmit = async (e) => {
@@ -112,8 +134,8 @@ const handleLikeToggle = async (likeable_id, likeable_type) => {
                   />
                   📎
                 </label>
-                <button type="submit" className="_feed_inner_comment_box_icon_btn">
-                  Post
+                <button type="submit" className="_feed_inner_comment_box_icon_btn" disabled={submitting}>
+                  {submitting ? "..." : "Post"}
                 </button>
               </div>
             </form>
@@ -181,18 +203,16 @@ const Comment = ({ comment, postId, handleCommentSubmit, handleLikeToggle, onOpe
     e.preventDefault();
     const topLevelId = comment.parent_id ?? comment.id;
 
-    const res = await handleCommentSubmit(postId, topLevelId, replyText);
-    // console.log(res.data.id);
-    if (res) {
-
-      setReplyText("");
-      setShowReplyBox(false);
-      setReplies((prev) => {
-        return [...prev, res.data];
-      });
-      setLastReplyId(res.data.id);
-      // fetchReplies();
-
+    try {
+      const res = await handleCommentSubmit(postId, topLevelId, replyText);
+      if (res) {
+        setReplyText("");
+        setShowReplyBox(false);
+        setReplies((prev) => [...prev, res.data]);
+        setLastReplyId(res.data.id);
+      }
+    } catch (err) {
+       // Error handled in handleCommentSubmit
     }
   };
 
@@ -256,7 +276,7 @@ const Comment = ({ comment, postId, handleCommentSubmit, handleLikeToggle, onOpe
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                 />
-                <button type="submit">Post</button>
+                <button type="submit" disabled={replyText.trim().length === 0}>Post</button>
               </form>
             </div>
           )}
