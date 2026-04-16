@@ -22,8 +22,20 @@ class CommentResource extends JsonResource
                 'name' => $this->user->name,
             ],
             'created_at' => $this->created_at->diffForHumans(),
-            'likes_count' => (int) $this->likes_count,
-            'liked' => auth()->check() ? $this->likes()->where('user_id', auth()->id())->exists() : false,
+            'likes_count' => (int) (function() {
+                try {
+                    return \Illuminate\Support\Facades\Redis::get("likes_count:comment:{$this->id}") ?? $this->likes_count;
+                } catch (\Exception $e) {
+                    return $this->likes_count;
+                }
+            })(),
+            'liked' => auth()->check() ? (function() {
+                try {
+                    $cached = \Illuminate\Support\Facades\Redis::get("user:".auth()->id().":liked:comment:{$this->id}");
+                    if ($cached !== null) return (bool) $cached;
+                } catch (\Exception $e) {}
+                return $this->likes()->where('user_id', auth()->id())->exists();
+            })() : false,
             
         ];
     }
