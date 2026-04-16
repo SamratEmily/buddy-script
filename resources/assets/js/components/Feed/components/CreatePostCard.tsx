@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import txtImg from '../../../../images/txt_img.png';
 import { User } from '../../../types';
+import { message } from 'antd';
 
 interface CreatePostCardProps {
   currentUser?: User | null;
@@ -24,8 +25,9 @@ const CreatePostCard: React.FC<CreatePostCardProps> = ({ currentUser = null, han
       setContent('');
       setFiles([]);
       setIsPublic(true); // reset to public after posting
+      message.success("Post created successfully!");
     } catch (err) {
-      console.error(err);
+      message.error("Failed to create post. Please try again.");
     } finally {
       setLoading(false);
     }

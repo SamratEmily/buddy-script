@@ -26,7 +26,13 @@ export function getSession(): User | null {
 export function logoutUser() {
     const session = getSession();
     if (session?.token) {
-        api.post("/logout").catch(() => { });
+        // Send token explicitly because the interceptor might fail to find it
+        // in localStorage if we remove it immediately below.
+        api.post("/logout", {}, {
+            headers: { Authorization: `Bearer ${session.token}` }
+        }).catch(() => { 
+            // We ignore errors here because we're clearing the local session regardless
+        });
     }
     localStorage.removeItem(SESSION_KEY);
 }

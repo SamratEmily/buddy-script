@@ -17,6 +17,7 @@ import LayoutChange from './components/LayoutChange';
 import { User } from '../../types';
 import { createPost, getPosts, likeToggle } from '../../services/api';
 import { Post } from '../../types';
+import { message } from 'antd';
 
 const Feed: React.FC<{ currentUser: User | null; onLogout: () => void }> = ({ currentUser, onLogout }) => {
 
@@ -41,7 +42,7 @@ const Feed: React.FC<{ currentUser: User | null; onLogout: () => void }> = ({ cu
                 setHasMore(false);
             }
         } catch (err) {
-            console.warn('failed to load posts', err);
+            message.error("Failed to load posts");
         } finally {
             setLoading(false);
         }
