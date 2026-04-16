@@ -20,9 +20,27 @@ class PostResource extends JsonResource
                 'id' => $this->user->id,
                 'name' => $this->user->name,
             ],
-            'likes_count' => (int) $this->likes_count,
-            'liked' => auth()->check() ? $this->likes->contains('user_id', auth()->id()) : false,
-            'comments_count' => (int) $this->comments_count,
+            'likes_count' => (int) (function() {
+                try {
+                    return \Illuminate\Support\Facades\Redis::get("likes_count:post:{$this->id}") ?? $this->likes_count;
+                } catch (\Exception $e) {
+                    return $this->likes_count;
+                }
+            })(),
+            'liked' => auth()->check() ? (function() {
+                try {
+                    $cached = \Illuminate\Support\Facades\Redis::get("user:".auth()->id().":liked:post:{$this->id}");
+                    if ($cached !== null) return (bool) $cached;
+                } catch (\Exception $e) {}
+                return $this->likes->contains('user_id', auth()->id());
+            })() : false,
+            'comments_count' => (int) (function() {
+                try {
+                    return \Illuminate\Support\Facades\Redis::get("comments_count:post:{$this->id}") ?? $this->comments_count;
+                } catch (\Exception $e) {
+                    return $this->comments_count;
+                }
+            })(),
             'created_at' => $this->created_at->diffForHumans(),
             'is_public' => $this->is_public,
         ];

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Resources\CommentResource;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Redis;
 
 class CommentController extends Controller
 {
@@ -72,6 +73,11 @@ class CommentController extends Controller
 
         if (!$request->parent_id) {
             $post->increment('comments_count');
+            try {
+                Redis::incr("comments_count:post:{$post->id}");
+            } catch (\Exception $e) {
+                // Ignore redis errors
+            }
         }
 
        return new CommentResource($comment->load('user'));
@@ -99,6 +105,11 @@ class CommentController extends Controller
 
         if ($isParent) {
             $post->decrement('comments_count');
+            try {
+                Redis::decr("comments_count:post:{$post->id}");
+            } catch (\Exception $e) {
+                // Ignore redis errors
+            }
         }
 
         return response()->json()->noContent();

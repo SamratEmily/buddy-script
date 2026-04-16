@@ -14,48 +14,81 @@ class LikeController extends Controller
 {
     public function toggle(ToggleLikesRequest $request)
     {
-        
-
         $data = $request->validated();
         $userId = auth()->id();
-
         $likeableId = $data['likeable_id'];
         $likeableType = $data['likeable_type'];
-        
-        // Identify target
+
         $likeable = $likeableType === 'post'
             ? Post::findOrFail($likeableId)
             : Comment::findOrFail($likeableId);
 
-        $type = get_class($likeable);
+        $type = $likeableType; // simplified type for redis key
+        $redisKey = "user:{$userId}:liked:{$type}:{$likeableId}";
+        $countKey = "likes_count:{$type}:{$likeableId}";
 
-        // Check if user already liked
-        $existingLike = \App\Models\Like::where([
-            'user_id' => $userId,
-            'likeable_id' => $likeableId,
-            'likeable_type' => $type,
-        ])->first();
+        try {
+            $isLiked = Redis::get($redisKey);
 
-        if ($existingLike) {
-            // Unlike
-            $existingLike->delete();
-            $likeable->decrement('likes_count');
-            $liked = false;
-        } else {
-            // Like
-            \App\Models\Like::create([
+            if ($isLiked === null) {
+                // Fallback to DB check if not in Redis
+                $isLiked = $likeable->likes()->where('user_id', $userId)->exists();
+                Redis::set($redisKey, $isLiked ? 1 : 0, 'EX', 3600);
+            }
+
+            if ($isLiked) {
+                // Unlike logic
+                Redis::set($redisKey, 0, 'EX', 3600);
+                $newCount = Redis::decr($countKey);
+                if ($newCount < 0) {
+                     $newCount = max(0, $likeable->likes_count - 1);
+                     Redis::set($countKey, $newCount);
+                }
+                $liked = false;
+            } else {
+                // Like logic
+                Redis::set($redisKey, 1, 'EX', 3600);
+                $newCount = Redis::incr($countKey);
+                $liked = true;
+            }
+
+            // Sync with DB in background
+            ToggleLikeJob::dispatch($likeable, $userId, $liked);
+
+            return response()->json([
+                'liked' => $liked,
+                'likes_count' => (int) $newCount,
+                'source' => 'cache'
+            ]);
+
+        } catch (\Exception $e) {
+            // Redis failure fallback: Purely DB logic
+            $existingLike = \App\Models\Like::where([
                 'user_id' => $userId,
                 'likeable_id' => $likeableId,
-                'likeable_type' => $type,
+                'likeable_type' => get_class($likeable),
+            ])->first();
+
+            if ($existingLike) {
+                $existingLike->delete();
+                $likeable->decrement('likes_count');
+                $liked = false;
+            } else {
+                \App\Models\Like::create([
+                    'user_id' => $userId,
+                    'likeable_id' => $likeableId,
+                    'likeable_type' => get_class($likeable),
+                ]);
+                $likeable->increment('likes_count');
+                $liked = true;
+            }
+
+            return response()->json([
+                'liked' => $liked,
+                'likes_count' => $likeable->fresh()->likes_count,
+                'source' => 'database'
             ]);
-            $likeable->increment('likes_count');
-            $liked = true;
         }
-        
-        return response()->json([
-            'liked' => $liked,
-            'likes_count' => $likeable->fresh()->likes_count,
-        ]);
     }
 
     public function likers(Request $request, string $type, int $id)
