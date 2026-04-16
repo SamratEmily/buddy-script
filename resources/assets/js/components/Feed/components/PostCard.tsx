@@ -37,7 +37,6 @@ const PostItem: React.FC<{
     const [loading, setLoading] = useState(false);
     const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
     const [openComment, setOpenComment] = useState(false);
-    const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
 
     const toggleDropdown = (e: React.MouseEvent) => {
         e.stopPropagation();
