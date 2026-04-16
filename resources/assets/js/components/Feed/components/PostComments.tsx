@@ -48,10 +48,11 @@ const handleLikeToggle = async (likeable_id, likeable_type) => {
   };
 
   useEffect(() => {
-    setComments([]);
-    setLastParentId(null);
-    fetchParents();
-  }, [post.id]);
+    if (openMainCommentBox && comments.length === 0) {
+      setLastParentId(null);
+      fetchParents();
+    }
+  }, [post.id, openMainCommentBox]);
 
   const handleCommentSubmit = async (postId, parentId, body, file = null) => {
     if (!body.trim() && !file) return;
