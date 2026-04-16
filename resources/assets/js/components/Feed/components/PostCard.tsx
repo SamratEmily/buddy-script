@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { message } from 'antd';
 import postImg from '../../../../images/post_img.png';
 import timelineImg from '../../../../images/timeline_img.png';
 import reactImg1 from '../../../../images/react_img1.png';
@@ -33,6 +34,7 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
     const [editingPostId, setEditingPostId] = useState<number | string | null>(null);
     const [editContent, setEditContent] = useState("");
     const [loading, setLoading] = useState(false);
+    const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
     const [openComment, setOpenComment] = useState(false);
     const [likersModal, setLikersModal] = useState<{ type: 'post' | 'comment'; id: number | string } | null>(null);
 
@@ -45,54 +47,64 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
     };
 
     const handleLikeToggle = async (likeable_id: number | string, likeable_type: 'post' | 'comment') => {
-        console.log('Toggling like for', likeable_type, 'with ID', likeable_id);
-        const res = await likeToggle(likeable_id, likeable_type);
-        if (likeable_type === 'post') { // post
-            setPosts(prevPosts =>
-                prevPosts.map(post =>
-                    post.id === likeable_id
-                        ? {
-                            ...post,
-                            liked: res?.liked,
-                            likes_count: res?.likes_count,
-                        }
-                        : post
-                )
-            );
-        } else if (likeable_type === 'comment') {
-            setPosts(prevPosts =>
-                prevPosts.map(post => ({
-                    ...post,
-                    comments: post.comments?.map(comment =>
-                        comment.id === likeable_id
+        const key = `${likeable_type}-${likeable_id}`;
+        if (likeLoading[key]) return;
+
+        setLikeLoading(prev => ({ ...prev, [key]: true }));
+        try {
+            const res = await likeToggle(likeable_id, likeable_type);
+            if (likeable_type === 'post') { // post
+                setPosts(prevPosts =>
+                    prevPosts.map(post =>
+                        post.id === likeable_id
                             ? {
-                                ...comment,
+                                ...post,
                                 liked: res?.liked,
                                 likes_count: res?.likes_count,
                             }
-                            : comment
+                            : post
                     )
-                }))
-            );
+                );
+            } else if (likeable_type === 'comment') {
+                setPosts(prevPosts =>
+                    prevPosts.map(post => ({
+                        ...post,
+                        comments: post.comments?.map(comment =>
+                            comment.id === likeable_id
+                                ? {
+                                    ...comment,
+                                    liked: res?.liked,
+                                    likes_count: res?.likes_count,
+                                }
+                                : comment
+                        )
+                    }))
+                );
+            }
+        } catch (err) {
+            message.error("Failed to update like. Please try again.");
+        } finally {
+            setLikeLoading(prev => ({ ...prev, [key]: false }));
         }
-
     };
 
     const handlePrivacyChange = async (postId: number | string, value: string) => {
-
-        const res = await privacyChange(postId.toString(), value === "1");
-        const updatedPost = res?.data ?? res.data?.data ?? null;
-        if (updatedPost) {
-            setPosts(prev =>
-                prev.map(post =>
-                    post.id === updatedPost.id
-                        ? { ...post, is_public: updatedPost.is_public } // only update public
-                        : post
-                )
-            );
+        try {
+            const res = await privacyChange(postId.toString(), value === "1");
+            const updatedPost = res?.data ?? res.data?.data ?? null;
+            if (updatedPost) {
+                setPosts(prev =>
+                    prev.map(post =>
+                        post.id === updatedPost.id
+                            ? { ...post, is_public: updatedPost.is_public } // only update public
+                            : post
+                    )
+                );
+                message.success("Privacy updated successfully");
+            }
+        } catch (err) {
+            message.error("Failed to update privacy");
         }
-
-
     }
 
     const handleAddComment = async (postId: number | string, comment: string) => {
@@ -109,8 +121,9 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
         try {
             await deletePost(postId.toString());
             setPosts(prev => prev.filter(p => p.id !== postId));
+            message.success("Post deleted successfully");
         } catch (err) {
-            console.error('delete post failed', err);
+            message.error("Failed to delete post");
         }
     };
 
@@ -121,15 +134,20 @@ const PostCard: React.FC<{ posts: Post[], setPosts: React.Dispatch<React.SetStat
     };
 
     const handleSaveEdit = async (postId: number | string) => {
+        if (loading) return;
+        setLoading(true);
         try {
             const res = await updatePost(postId.toString(), { body: editContent });
             const updatedPost = res?.data ?? res;
             if (updatedPost) {
                 setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: updatedPost.body || updatedPost.content } : p));
                 setEditingPostId(null);
+                message.success("Post updated successfully");
             }
         } catch (err) {
-            console.error('update post failed', err);
+            message.error("Failed to update post");
+        } finally {
+            setLoading(false);
         }
     };
 
